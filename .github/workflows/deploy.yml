@@ -1,12 +1,9 @@
-name: Deploy to GitHub Pages
+name: Deploy Vite React App
 
 on:
   push:
     branches:
-      - main  # Change this if your main branch has a different name
-
-permissions:
-  contents: write  # Required to push to gh-pages branch
+      - main  # Change to your deployment branch if needed
 
 jobs:
   build:
@@ -14,34 +11,49 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: 18  # Use the latest LTS version
-
-      - name: Authenticate for Private Repo Access
-        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GH_PAT }}" > ~/.npmrc
-
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          branch: gh-pages
-          folder: dist
-          clean: true  # Ensures old files are removed
-
-      - name: Authenticate for Private Repo Access
-        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GH_PAT }}" > ~/.npmrc
+          node-version: 18  # Ensure this matches your local version
+          cache: 'npm'
 
       - name: Install Dependencies
         run: npm install
 
-      - name: Build Project
+      - name: Authenticate for Private Repo Access
+        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GH_PAT }}" > ~/.npmrc
+
+      - name: Build the Project
         run: npm run build
+
+      - name: List Build Files (Debugging)
+        run: ls -R dist || echo "No build output found!"
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: built-files
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: built-files
+          path: dist
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
           folder: dist
+          clean: true
