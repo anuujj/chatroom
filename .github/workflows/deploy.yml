@@ -18,12 +18,13 @@ jobs:
         with:
           node-version: 18  # Ensure this matches your local version
           cache: 'npm'
+          
+      - name: Authenticate for Private Repo Access
+        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GH_PAT }}" > ~/.npmrc
 
       - name: Install Dependencies
         run: npm install
 
-      - name: Authenticate for Private Repo Access
-        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GH_PAT }}" > ~/.npmrc
 
       - name: Build the Project
         run: npm run build
